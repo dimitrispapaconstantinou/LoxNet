@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LoxNet.Scan;
+using LoxNet.Tokens;
 
 
 namespace LoxNet
@@ -48,13 +50,17 @@ namespace LoxNet
           break;
 
         run(line);
+        hadError = false;
       }
     }
 
 
     private static void run(string source)
     {
-      var tokens = source.Split(" ");
+      Scanner scanner = new Scanner(source);
+      List<Token> tokens = scanner.scanTokens();
+
+      //var tokens = source.Split(" ");
 
       foreach (var token in tokens)
       {
@@ -62,7 +68,7 @@ namespace LoxNet
       }
     }
 
-    static void error(int line, string message)
+    public static void error(int line, string message)
     {
       report(line, "", message);
     }
