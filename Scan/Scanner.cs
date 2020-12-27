@@ -15,6 +15,30 @@ namespace LoxNet.Scan
     private int current = 0;
     private int line = 1;
 
+
+    private bool isStillComments = false;
+
+    private static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType>()
+    {
+      {"and", TokenType.AND},
+      {"class", TokenType.CLASS},
+      {"else", TokenType.ELSE},
+      {"false", TokenType.FALSE},
+      {"for", TokenType.FOR},
+      {"fun", TokenType.FUN},
+      {"if", TokenType.IF},
+      {"nil", TokenType.NIL},
+      {"or", TokenType.OR},
+      {"print", TokenType.PRINT},
+      {"return", TokenType.RETURN},
+      {"super", TokenType.SUPER},
+      {"this", TokenType.THIS},
+      {"true", TokenType.TRUE},
+      {"var", TokenType.VAR},
+      {"while", TokenType.WHILE}
+    };
+
+
     public Scanner(string source)
     {
       this.source = source;
@@ -66,7 +90,22 @@ namespace LoxNet.Scan
           addToken(TokenType.SEMICOLON);
           break;
         case '*':
-          addToken(TokenType.STAR);
+          if (!match('/') && !isStillComments)
+          {
+            addToken(TokenType.STAR);
+          }
+          else
+          {
+            //while (peek() != '*' && peekNext() != '/')
+            while (peek() != '/')
+            {
+              advance();
+              isStillComments = true;
+            }
+
+            current++;
+            isStillComments = false;
+          }
           break;
 
         case '!':
@@ -83,13 +122,24 @@ namespace LoxNet.Scan
           break;
 
         case '/':
-          if (match('/'))
+          if (match('/') )
           {
             // A comment goes until the end of the line.
             while (peek() != '\n' && !isAtEnd())
+            {
               advance();
+            }
           }
-          else
+          else if (match('*'))
+          {
+            //while (peek() != '*' && peekNext() != '/' && !isAtEnd())
+            while (peek() != '*' && peekNext() != '/')
+            {
+              advance();
+              isStillComments = true;
+            }
+          }
+          else if (isStillComments==false)
           {
             addToken(TokenType.SLASH);
           }
@@ -115,6 +165,10 @@ namespace LoxNet.Scan
           {
             Number();
           }
+          else if (isAlpha(c))
+          {
+            identifier();
+          }
           else
           {
             Program.error(line, "Unexpected character.");
@@ -122,6 +176,35 @@ namespace LoxNet.Scan
 
           break;
       }
+    }
+
+    private bool isAlpha(char c)
+    {
+      return (c >= 'a' && c <= 'z') ||
+             (c >= 'A' && c <= 'Z') ||
+             c == '_';
+    }
+
+    private void identifier()
+    {
+      while (isAlphaNumeric(peek()))
+      {
+        advance();
+      }
+
+      string text = source.Slice(start, current);
+      TokenType type = TokenType.IDENTIFIER;
+      if (keywords.TryGetValue(text, out TokenType kw_type))
+      {
+        type = kw_type;
+      }
+
+      addToken(type);
+    }
+
+    private bool isAlphaNumeric(char c)
+    {
+      return isAlpha(c) || isDigit(c);
     }
 
     private void Number()
@@ -141,10 +224,9 @@ namespace LoxNet.Scan
         {
           advance();
         }
-
       }
 
-      addToken(TokenType.NUMBER, double.Parse(source.Substring(start, current)));
+      addToken(TokenType.NUMBER, double.Parse(source.Slice(start, current)));
     }
 
     private bool isDigit(char c)
@@ -180,7 +262,7 @@ namespace LoxNet.Scan
       advance();
 
       // Trim the surrounding quotes.
-      string value = source.Substring(start + 1, current - 1);
+      string value = source.Slice(start + 1, current - 1);
       addToken(TokenType.STRING, value);
     }
 

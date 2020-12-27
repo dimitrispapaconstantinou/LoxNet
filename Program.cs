@@ -25,7 +25,8 @@ namespace LoxNet
       }
       else
       {
-        runPrompt();
+        runFile("no1.txt");
+        //runPrompt();
       }
     }
 
@@ -64,7 +65,8 @@ namespace LoxNet
 
       foreach (var token in tokens)
       {
-        Console.WriteLine(token);
+        Console.WriteLine("Line:"+ token.line +" type:" + token.type + " literal:" + token.literal + " lexime:" + token.lexeme);
+
       }
     }
 
