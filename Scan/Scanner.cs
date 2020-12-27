@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Text;
 using LoxNet.Tokens;
- 
+
 namespace LoxNet.Scan
 {
   public class Scanner
@@ -68,11 +68,142 @@ namespace LoxNet.Scan
         case '*':
           addToken(TokenType.STAR);
           break;
+
+        case '!':
+          addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
+          break;
+        case '=':
+          addToken(match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
+          break;
+        case '<':
+          addToken(match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
+          break;
+        case '>':
+          addToken(match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
+          break;
+
+        case '/':
+          if (match('/'))
+          {
+            // A comment goes until the end of the line.
+            while (peek() != '\n' && !isAtEnd())
+              advance();
+          }
+          else
+          {
+            addToken(TokenType.SLASH);
+          }
+
+          break;
+
+        case ' ':
+        case '\r':
+        case '\t':
+          // Ignore whitespace.
+          break;
+
+        case '\n':
+          line++;
+          break;
+
+        case '"':
+          StringLiteral();
+          break;
+
         default:
-          Program.error (line, "Unexpected character.");
-        break;
+          if (isDigit(c))
+          {
+            Number();
+          }
+          else
+          {
+            Program.error(line, "Unexpected character.");
+          }
+
+          break;
+      }
+    }
+
+    private void Number()
+    {
+      while (isDigit(peek()))
+      {
+        advance();
       }
 
+      // Look for a fractional part.
+      if (peek() == '.' && isDigit(peekNext()))
+      {
+        // Consume the "."
+        advance();
+
+        while (isDigit(peek()))
+        {
+          advance();
+        }
+
+      }
+
+      addToken(TokenType.NUMBER, double.Parse(source.Substring(start, current)));
+    }
+
+    private bool isDigit(char c)
+    {
+      return c >= '0' && c <= '9';
+    }
+
+    private char peekNext()
+    {
+      if (current + 1 >= source.Length)
+      {
+        return '\0';
+      }
+
+      return source[current + 1];
+    }
+
+    private void StringLiteral()
+    {
+      while (peek() != '"' && !isAtEnd())
+      {
+        if (peek() == '\n') line++;
+        advance();
+      }
+
+      if (isAtEnd())
+      {
+        Program.error(line, "Unterminated string.");
+        return;
+      }
+
+      // The closing ".
+      advance();
+
+      // Trim the surrounding quotes.
+      string value = source.Substring(start + 1, current - 1);
+      addToken(TokenType.STRING, value);
+    }
+
+
+    private bool match(char expected)
+    {
+      if (isAtEnd())
+        return false;
+
+      if (source[current] != expected)
+        return false;
+
+      current++;
+
+      return true;
+    }
+
+    private char peek()
+    {
+      if (isAtEnd())
+        return '\0';
+
+      return source[current];
     }
 
     private char advance()
@@ -88,7 +219,7 @@ namespace LoxNet.Scan
 
     private void addToken(TokenType type, Object literal)
     {
-      string text = source.Slice(start, current); //****************error!!!!!
+      string text = source.Slice(start, current);
       tokens.Add(new Token(type, text, literal, line));
     }
 
@@ -96,7 +227,5 @@ namespace LoxNet.Scan
     {
       return current >= source.Length;
     }
-
- 
   }
 }
