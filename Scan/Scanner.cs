@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Text;
 using LoxNet.Tokens;
 
 namespace LoxNet.Scan
@@ -15,8 +13,6 @@ namespace LoxNet.Scan
     private int current = 0;
     private int line = 1;
 
-
-    private bool isStillComments = false;
 
     private static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType>()
     {
@@ -89,24 +85,7 @@ namespace LoxNet.Scan
         case ';':
           addToken(TokenType.SEMICOLON);
           break;
-        case '*':
-          if (!match('/') && !isStillComments)
-          {
-            addToken(TokenType.STAR);
-          }
-          else
-          {
-            //while (peek() != '*' && peekNext() != '/')
-            while (peek() != '/')
-            {
-              advance();
-              isStillComments = true;
-            }
-
-            current++;
-            isStillComments = false;
-          }
-          break;
+        case '*': addToken(TokenType.STAR); break;
 
         case '!':
           addToken(match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
@@ -122,7 +101,7 @@ namespace LoxNet.Scan
           break;
 
         case '/':
-          if (match('/') )
+          if (match('/'))
           {
             // A comment goes until the end of the line.
             while (peek() != '\n' && !isAtEnd())
@@ -130,21 +109,13 @@ namespace LoxNet.Scan
               advance();
             }
           }
-          else if (match('*'))
-          {
-            //while (peek() != '*' && peekNext() != '/' && !isAtEnd())
-            while (peek() != '*' && peekNext() != '/')
-            {
-              advance();
-              isStillComments = true;
-            }
-          }
-          else if (isStillComments==false)
+          else
           {
             addToken(TokenType.SLASH);
           }
-
           break;
+          
+
 
         case ' ':
         case '\r':
