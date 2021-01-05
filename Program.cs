@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LoxNet.AST;
 using LoxNet.Scan;
 using LoxNet.Tokens;
 
@@ -15,20 +16,30 @@ namespace LoxNet
 
     static void Main(string[] args)
     {
-      if (args.Length > 1)
-      {
-        Console.WriteLine("Usage LoxNet [script]");
-      }
-      else if (args.Length == 1)
-      {
-        runFile(args[0]);
-      }
-      else
-      {
-        runFile("no1.txt");
-        //runPrompt();
-      }
-    }
+        Expr expression = new Expr.Binary(
+            new Expr.Unary(
+                new Token(TokenType.MINUS, "-", null, 1),
+                new Expr.Literal(123)),
+            new Token(TokenType.STAR, "*", null, 1),
+            new Expr.Grouping(
+                new Expr.Literal(45.67)));
+
+        Console.WriteLine(new AstPrinter().Print(expression));
+
+      //  if (args.Length > 1)
+      //{
+      //  Console.WriteLine("Usage LoxNet [script]");
+      //}
+      //else if (args.Length == 1)
+      //{
+      //  runFile(args[0]);
+      //}
+      //else
+      //{
+      //  runFile("no1.txt");
+      //  //runPrompt();
+      //}
+     }
 
     private static void runFile(string path)
     {

@@ -3,20 +3,32 @@ using System.Collections.Generic;
 using System.Text;
 using LoxNet.Tokens;
 
+/*
+ * expression     → literal
+               | unary
+               | binary
+               | grouping ;
 
+literal        → NUMBER | STRING | "true" | "false" | "nil" ;
+grouping       → "(" expression ")" ;
+unary          → ( "-" | "!" ) expression ;
+binary         → expression operator expression ;
+operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
+               | "+"  | "-"  | "*" | "/" ;
+ */
 namespace LoxNet.AST
 {
   abstract class Expr
   {
     public interface IVisitor<T>
     {
-      T VisitBinaryExpr(Binary expr);
+      public T VisitBinaryExpr(Binary expr);
 
-      T VisitGroupingExpr(Grouping expr);
-       
-      T VisitLiteralExpr(Literal expr);
+      public T VisitGroupingExpr(Grouping expr);
 
-      T VisitUnaryExpr(Unary expr);
+      public T VisitLiteralExpr(Literal expr);
+
+      public T VisitUnaryExpr(Unary expr);
     }
 
     public abstract T Accept<T>(IVisitor<T> visitor);
